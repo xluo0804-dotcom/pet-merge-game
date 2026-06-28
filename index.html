@@ -2,11 +2,11 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>宠物合成游戏</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:sans-serif;background:#f5f0eb;display:flex;justify-content:center;padding:8px 0;min-height:100vh}
+body{font-family:sans-serif;background:#f5f0eb;display:flex;justify-content:center;padding:8px 0;min-height:100vh;user-select:none;-webkit-user-select:none}
 #wrap{display:flex;gap:8px;align-items:flex-start}
 #left{display:flex;flex-direction:column;gap:7px;width:88px}
 #right{display:flex;flex-direction:column;gap:7px;width:88px;overflow:hidden}
@@ -15,7 +15,7 @@ body{font-family:sans-serif;background:#f5f0eb;display:flex;justify-content:cent
 .val{font-size:19px;font-weight:700;color:#222}
 .val-sm{font-size:15px;font-weight:700;color:#e07020}
 .nbox{display:flex;align-items:center;justify-content:center;height:60px}
-#gameCanvas{border:2px solid #e0d8d0;border-radius:14px;display:block;background:#fff9f5;touch-action:none;cursor:crosshair}
+#gameCanvas{border:2px solid #e0d8d0;border-radius:14px;display:block;background:#fff9f5;touch-action:none;cursor:crosshair;-webkit-tap-highlight-color:transparent}
 .btn{border:1px solid #ddd;border-radius:8px;padding:7px;font-size:12px;cursor:pointer;background:#fff;color:#333;width:100%}
 .btn:hover{background:#f5f5f5}
 .chain{font-size:9px;color:#999;line-height:1.7;overflow:hidden}
@@ -55,45 +55,43 @@ const LEVEL_IMGS=["data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBA
 const LEVEL_NAMES=["\u5c0f\u7070\u732b", "\u7070\u5e7c\u732b", "\u732b\u72d7\u9760\u9760", "\u5c0f\u67f4\u72ac", "\u79cb\u7530\u7b11\u7b11", "\u767d\u732b\u7279\u5199", "\u732b\u732b\u73a9\u5177", "\u732b\u72d7\u540c\u6b22", "DJ\u767d\u732b\ud83c\udfa7"];
 const RADII=[13, 18, 24, 30, 37, 44, 52, 61, 70];
 const SCORES=[1, 3, 6, 10, 15, 21, 28, 36, 45];
-const N=LEVEL_IMGS.length; // 9
+const N=LEVEL_IMGS.length;
 
-let best = parseInt(localStorage.getItem('petMergeBest') || '0');
+let best=parseInt(localStorage.getItem('petMergeBest')||'0');
 
-const rawImgs=LEVEL_IMGS.map(src=>{ const im=new Image(); im.src=src; return im; });
+const rawImgs=LEVEL_IMGS.map(src=>{const im=new Image();im.src=src;return im;});
 const offscreens=new Array(N);
 
 function buildOffscreen(i){
-  const r=RADII[i], sz=r*2+4;
+  const r=RADII[i],sz=r*2+4;
   const oc=document.createElement('canvas');
-  oc.width=sz; oc.height=sz;
+  oc.width=sz;oc.height=sz;
   const c=oc.getContext('2d');
   const im=rawImgs[i];
   c.save();
-  c.beginPath(); c.arc(sz/2,sz/2,r,0,Math.PI*2); c.clip();
+  c.beginPath();c.arc(sz/2,sz/2,r,0,Math.PI*2);c.clip();
   if(im.naturalWidth>0){
     const iw=im.naturalWidth,ih=im.naturalHeight,sc=Math.max(sz/iw,sz/ih);
     c.drawImage(im,(sz-iw*sc)/2,(sz-ih*sc)/2,iw*sc,ih*sc);
-  } else {
-    c.fillStyle='#ddd'; c.fillRect(0,0,sz,sz);
-  }
+  }else{c.fillStyle='#ddd';c.fillRect(0,0,sz,sz);}
   c.restore();
-  c.beginPath(); c.arc(sz/2,sz/2,r-1.5,0,Math.PI*2);
-  c.strokeStyle='rgba(255,255,255,0.95)'; c.lineWidth=3; c.stroke();
-  c.beginPath(); c.arc(sz/2,sz/2,r,0,Math.PI*2);
-  c.strokeStyle='rgba(0,0,0,0.1)'; c.lineWidth=1.5; c.stroke();
+  c.beginPath();c.arc(sz/2,sz/2,r-1.5,0,Math.PI*2);
+  c.strokeStyle='rgba(255,255,255,0.95)';c.lineWidth=3;c.stroke();
+  c.beginPath();c.arc(sz/2,sz/2,r,0,Math.PI*2);
+  c.strokeStyle='rgba(0,0,0,0.1)';c.lineWidth=1.5;c.stroke();
   offscreens[i]=oc;
 }
 
-function buildAll(){ for(let i=0;i<N;i++) buildOffscreen(i); }
+function buildAll(){for(let i=0;i<N;i++)buildOffscreen(i);}
 rawImgs.forEach((im,i)=>{
   const done=()=>buildOffscreen(i);
-  if(im.complete&&im.naturalWidth>0) done();
-  else { im.onload=done; im.onerror=done; }
+  if(im.complete&&im.naturalWidth>0)done();
+  else{im.onload=done;im.onerror=done;}
 });
 buildAll();
 
 function drawLevel(ctx,x,y,i,alpha){
-  const oc=offscreens[i]; if(!oc) return;
+  const oc=offscreens[i];if(!oc)return;
   const r=RADII[i],sz=r*2+4;
   ctx.globalAlpha=alpha??1;
   ctx.drawImage(oc,x-sz/2,y-sz/2);
@@ -109,13 +107,20 @@ const G=0.5,DAMP=0.25,FRIC=0.55,AIR_FRIC=0.97,BALL_DAMP=0.6,MAX_SPAWN=4;
 
 let balls=[],score=0,nextLv=0,dropping=false,dead=false;
 let mouseX=W/2,targetX=W/2,particles=[],mergeQueue=[];
-
-// 死亡检测：记录每个球第一次进入危险区的时间
-const dangerSince = new Map();
+const dangerSince=new Map();
 
 function rnd(n){return Math.floor(Math.random()*n)}
 function randNext(){return rnd(MAX_SPAWN)}
-function saveBest(){ localStorage.setItem('petMergeBest', best.toString()); }
+function saveBest(){localStorage.setItem('petMergeBest',best.toString());}
+
+// 关键：统一把客户端坐标转换为canvas内坐标
+// 手机上canvas可能被缩放，必须用getBoundingClientRect校正
+function clientToCanvas(clientX){
+  const rect=cv.getBoundingClientRect();
+  // canvas实际显示宽度可能与canvas.width不同，需要按比例换算
+  const scaleX=W/rect.width;
+  return (clientX-rect.left)*scaleX;
+}
 
 function updateUI(){
   document.getElementById('sc').textContent=score;
@@ -124,37 +129,37 @@ function updateUI(){
   const oc=offscreens[nextLv];
   if(oc){
     const r=RADII[nextLv],sz=r*2+4,s=50/sz;
-    nctx.save(); nctx.translate(28,28); nctx.scale(s,s);
-    nctx.drawImage(oc,-sz/2,-sz/2); nctx.restore();
+    nctx.save();nctx.translate(28,28);nctx.scale(s,s);
+    nctx.drawImage(oc,-sz/2,-sz/2);nctx.restore();
   }
   let h='';
-  for(let i=0;i<N-1;i++) h+=`Lv${i+1}×2→Lv${i+2}<br>`;
+  for(let i=0;i<N-1;i++)h+=`Lv${i+1}×2→Lv${i+2}<br>`;
   h+=`Lv${N} = 最终形态`;
   document.getElementById('chain').innerHTML=h;
 }
 
 function restart(){
-  balls=[]; score=0; nextLv=randNext(); dropping=false; dead=false;
-  particles=[]; mergeQueue=[]; dangerSince.clear();
+  balls=[];score=0;nextLv=randNext();dropping=false;dead=false;
+  particles=[];mergeQueue=[];dangerSince.clear();
   targetX=mouseX=W/2;
   document.getElementById('go').classList.remove('on');
   updateUI();
 }
 
 function spawnBall(x,y,lv){
-  // 保证lv在合法范围内
-  if(lv<0||lv>=N) return null;
+  if(lv<0||lv>=N)return null;
   const b={x,y,r:RADII[lv],lv,vx:0,vy:0,born:Date.now()};
-  balls.push(b);
-  return b;
+  balls.push(b);return b;
 }
 
 function dropBall(){
   if(dropping||dead)return;
   dropping=true;
   const r=RADII[nextLv];
-  spawnBall(Math.max(WL+r,Math.min(WR-r,mouseX)),DL,nextLv);
-  nextLv=randNext(); updateUI();
+  // 用当前mouseX（已经是canvas坐标）来投球
+  const x=Math.max(WL+r,Math.min(WR-r,mouseX));
+  spawnBall(x,DL,nextLv);
+  nextLv=randNext();updateUI();
   setTimeout(()=>dropping=false,380);
 }
 
@@ -167,16 +172,10 @@ function addParticle(x,y){
 
 function physics(){
   for(const b of balls){
-    b.vx*=AIR_FRIC;
-    b.vy+=G;
-    b.x+=b.vx; b.y+=b.vy;
-    if(b.y+b.r>=FL){
-      b.y=FL-b.r; b.vy*=-DAMP; b.vx*=FRIC;
-      if(Math.abs(b.vy)<0.8) b.vy=0;
-      if(Math.abs(b.vx)<0.3) b.vx=0;
-    }
-    if(b.x-b.r<=WL){b.x=WL+b.r; b.vx=Math.abs(b.vx)*DAMP;}
-    if(b.x+b.r>=WR){b.x=WR-b.r; b.vx=-Math.abs(b.vx)*DAMP;}
+    b.vx*=AIR_FRIC;b.vy+=G;b.x+=b.vx;b.y+=b.vy;
+    if(b.y+b.r>=FL){b.y=FL-b.r;b.vy*=-DAMP;b.vx*=FRIC;if(Math.abs(b.vy)<0.8)b.vy=0;if(Math.abs(b.vx)<0.3)b.vx=0;}
+    if(b.x-b.r<=WL){b.x=WL+b.r;b.vx=Math.abs(b.vx)*DAMP;}
+    if(b.x+b.r>=WR){b.x=WR-b.r;b.vx=-Math.abs(b.vx)*DAMP;}
   }
   for(let it=0;it<3;it++){
     for(let i=0;i<balls.length;i++){
@@ -186,15 +185,10 @@ function physics(){
         const minD=a.r+b.r-1;
         if(d2<minD*minD&&d2>0.01){
           const dist=Math.sqrt(d2),ov=(minD-dist)/2,nx=dx/dist,ny=dy/dist;
-          a.x-=nx*ov; a.y-=ny*ov;
-          b.x+=nx*ov; b.y+=ny*ov;
+          a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;
           const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
-          if(rv<0){
-            const imp=rv*BALL_DAMP;
-            a.vx+=imp*nx; a.vy+=imp*ny;
-            b.vx-=imp*nx; b.vy-=imp*ny;
-          }
-          a.vx*=0.92; b.vx*=0.92;
+          if(rv<0){const imp=rv*BALL_DAMP;a.vx+=imp*nx;a.vy+=imp*ny;b.vx-=imp*nx;b.vy-=imp*ny;}
+          a.vx*=0.92;b.vx*=0.92;
         }
       }
     }
@@ -205,76 +199,55 @@ function detectMerges(){
   const used=new Set();
   for(let i=0;i<balls.length;i++){
     for(let j=i+1;j<balls.length;j++){
-      if(used.has(i)||used.has(j)) continue;
+      if(used.has(i)||used.has(j))continue;
       const a=balls[i],b=balls[j];
-      if(a.lv!==b.lv) continue;
-      // 只合并低于最高级的球
-      if(a.lv>=N-1) continue;
-      if(Date.now()-a.born<280||Date.now()-b.born<280) continue;
+      if(a.lv!==b.lv||a.lv>=N-1)continue;
+      if(Date.now()-a.born<280||Date.now()-b.born<280)continue;
       const dx=b.x-a.x,dy=b.y-a.y;
-      if(dx*dx+dy*dy<(a.r+b.r+1)*(a.r+b.r+1)){
-        mergeQueue.push([i,j]);
-        used.add(i); used.add(j);
-      }
+      if(dx*dx+dy*dy<(a.r+b.r+1)*(a.r+b.r+1)){mergeQueue.push([i,j]);used.add(i);used.add(j);}
     }
   }
 }
 
 function processMerges(){
-  if(!mergeQueue.length) return;
+  if(!mergeQueue.length)return;
   const batch=mergeQueue.splice(0,mergeQueue.length);
-  const rem=new Set();
-  const toAdd=[];
+  const rem=new Set();const toAdd=[];
   for(const[i,j]of batch){
-    if(rem.has(i)||rem.has(j)) continue;
-    if(i>=balls.length||j>=balls.length) continue;
+    if(rem.has(i)||rem.has(j))continue;
+    if(i>=balls.length||j>=balls.length)continue;
     const a=balls[i],b=balls[j];
-    // 再次校验：级别相同且都不是最高级
-    if(a.lv!==b.lv||a.lv>=N-1) continue;
-    const newLv=a.lv+1; // 严格+1，不会越界（已检查a.lv<N-1）
-    const mx=(a.x+b.x)/2;
+    if(a.lv!==b.lv||a.lv>=N-1)continue;
+    const newLv=a.lv+1,mx=(a.x+b.x)/2;
     let my=Math.max(a.y,b.y);
-    if(my+RADII[newLv]>FL) my=FL-RADII[newLv];
-    rem.add(i); rem.add(j);
+    if(my+RADII[newLv]>FL)my=FL-RADII[newLv];
+    rem.add(i);rem.add(j);
     addParticle(mx,my);
     score+=SCORES[newLv];
-    if(score>best){ best=score; saveBest(); }
+    if(score>best){best=score;saveBest();}
     toAdd.push({x:mx,y:my,r:RADII[newLv],lv:newLv,vx:0,vy:0,born:Date.now()});
     document.getElementById('sc').textContent=score;
     document.getElementById('bs').textContent=best;
   }
-  if(rem.size){
-    balls=balls.filter((_,i)=>!rem.has(i));
-    balls.push(...toAdd);
-  }
+  if(rem.size){balls=balls.filter((_,i)=>!rem.has(i));balls.push(...toAdd);}
 }
 
-// 死亡判定：球进入危险区超过1.5秒即判死，不依赖速度条件
 function checkDead(){
-  if(dead) return;
+  if(dead)return;
   const now=Date.now();
   for(const b of balls){
-    const inDanger = b.y-b.r < DL+8;
-    if(inDanger){
-      if(!dangerSince.has(b)){
-        dangerSince.set(b, now);
-      } else if(now - dangerSince.get(b) > 1500){
-        // 在危险区超过1.5秒，判定游戏结束
-        triggerDead();
-        return;
-      }
-    } else {
-      dangerSince.delete(b);
-    }
+    if(b.y-b.r<DL+8){
+      if(!dangerSince.has(b))dangerSince.set(b,now);
+      else if(now-dangerSince.get(b)>1500){triggerDead();return;}
+    }else{dangerSince.delete(b);}
   }
 }
 
 function triggerDead(){
   dead=true;
-  if(score>best){ best=score; saveBest(); }
-  const isNew=(score>0&&score===best);
-  document.getElementById('gop').innerHTML=
-    `本局得分：<b>${score}</b><br>历史最高：<b>${best}</b>${isNew?' 🎉 新纪录！':''}`;
+  if(score>best){best=score;saveBest();}
+  const isNew=score>0&&score===best;
+  document.getElementById('gop').innerHTML=`本局得分：<b>${score}</b><br>历史最高：<b>${best}</b>${isNew?' 🎉 新纪录！':''}`;
   document.getElementById('bs').textContent=best;
   document.getElementById('go').classList.add('on');
 }
@@ -298,44 +271,63 @@ function draw(){
     ctx.setLineDash([]);
     drawLevel(ctx,gx,DL+r+2,nextLv,0.45);
   }
-  for(const b of balls) drawLevel(ctx,b.x,b.y,b.lv,1);
+  for(const b of balls)drawLevel(ctx,b.x,b.y,b.lv,1);
   particles=particles.filter(p=>p.life>0);
   for(const p of particles){
     p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.life-=0.05;
-    ctx.globalAlpha=p.life;
-    ctx.fillStyle=p.c;
+    ctx.globalAlpha=p.life;ctx.fillStyle=p.c;
     ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
   }
 }
 
+// ===== 事件监听：统一用 clientToCanvas 换算坐标 =====
 cv.addEventListener('mousemove',e=>{
-  const rect=cv.getBoundingClientRect();
-  targetX=(e.clientX-rect.left)*(W/rect.width);
+  targetX=clientToCanvas(e.clientX);
 });
+
 cv.addEventListener('click',e=>{
-  const rect=cv.getBoundingClientRect();
-  targetX=(e.clientX-rect.left)*(W/rect.width);
-  mouseX=targetX; dropBall();
+  targetX=clientToCanvas(e.clientX);
+  mouseX=targetX;
+  dropBall();
 });
+
+// 手机触摸：touchmove 更新位置，touchend 投球
 cv.addEventListener('touchmove',e=>{
   e.preventDefault();
-  const rect=cv.getBoundingClientRect();
-  targetX=(e.touches[0].clientX-rect.left)*(W/rect.width);
+  // 只取第一个触摸点
+  targetX=clientToCanvas(e.touches[0].clientX);
+  // 手机上直接同步，不用等插值，让准星跟手更即时
+  mouseX=targetX;
 },{passive:false});
+
 cv.addEventListener('touchend',e=>{
-  e.preventDefault(); mouseX=targetX; dropBall();
+  e.preventDefault();
+  // touchend 时 touches 为空，用 changedTouches 获取最后位置
+  if(e.changedTouches.length>0){
+    targetX=clientToCanvas(e.changedTouches[0].clientX);
+    mouseX=targetX;
+  }
+  dropBall();
+},{passive:false});
+
+// 防止手机上长按选中等默认行为
+cv.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length>0){
+    targetX=clientToCanvas(e.touches[0].clientX);
+    mouseX=targetX;
+  }
 },{passive:false});
 
 let lastT=0;
 function loop(ts){
-  const dt=Math.min(ts-lastT,32); lastT=ts;
+  const dt=Math.min(ts-lastT,32);lastT=ts;
+  // 桌面端平滑插值，手机端已在事件里直接同步
   mouseX+=(targetX-mouseX)*0.3;
   if(!dead){
-    for(let i=0;i<4;i++) physics();
-    detectMerges();
-    processMerges();
-    checkDead();
+    for(let i=0;i<4;i++)physics();
+    detectMerges();processMerges();checkDead();
   }
   draw();
   requestAnimationFrame(loop);
